@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechroLim Super Processor</title>
+    <link rel="manifest" href="manifest.json">
+
+    <style>
+        :root {
+            --bg-base: #0b0f19;
+            --bg-panel: #131b2e;
+            --bg-input: #080c14;
+            --border-glow: #1e3a8a;
+            --accent-cyan: #06b6d4;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --text-main: #e2e8f0;
+            --text-dim: #94a3b8;
+            --font-mono: 'Courier New', Courier, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: system-ui, -apple-system, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            background: var(--bg-panel);
+            border-bottom: 2px solid var(--border-glow);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 1.25rem;
+            letter-spacing: 2px;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        button, .file-btn {
+            background: #1e293b;
+            color: var(--text-main);
+            border: 1px solid var(--border-glow);
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        button:hover, .file-btn:hover {
+            background: var(--border-glow);
+            color: #fff;
+        }
+
+        #installBtn {
+            background: var(--accent-cyan);
+            color: #000;
+            font-weight: bold;
+            display: none;
+            border: none;
+        }
+
+        #installBtn:hover {
+            background: #22d3ee;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 380px 1fr;
+            flex: 1;
+            gap: 10px;
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        .workstation {
+            background: var(--bg-panel);
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .station-header {
+            background: #0f172a;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--text-dim);
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+        }
+
+        textarea.code-input {
+            flex: 1;
+            background: var(--bg-input);
+            color: var(--accent-cyan);
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            border: 1px solid #1e293b;
+            border-radius: 4px;
+            padding: 10px;
+            resize: none;
+            outline: none;
+        }
+
+        .terminal-container {
+            height: 140px;
+            background: var(--bg-input);
+            border-top: 1px solid #1e293b;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .terminal-output {
+            flex: 1;
+            padding: 8px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            overflow-y: auto;
+        }
+
+        .furnace-core {
+            background: radial-gradient(circle at center, #1e1b4b 0%, #090d16 80%);
+            border: 2px solid var(--accent-amber);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            position: relative;
+            box-shadow: inset 0 0 30px rgba(245, 158, 11, 0.15);
+        }
+
+        .furnace-title {
+            text-align: center;
+            font-size: 0.9rem;
+            letter-spacing: 3px;
+            color: var(--accent-amber);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .specimen-dropzone {
+            flex: 1;
+            border: 2px dashed #334155;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            background: rgba(15, 23, 42, 0.4);
+            transition: all 0.2s ease;
+            margin-bottom: 15px;
+        }
+
+        .specimen-dropzone.dragover {
+            border-color: var(--accent-amber);
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--accent-amber);
+        }
+
+        .command-center {
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 6px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .command-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            background: var(--bg-input);
+            border: 1px solid #334155;
+            color: var(--text-main);
+            padding: 6px 10px;
+            font-size: 0.85rem;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        .btn-ignite {
+            background: var(--accent-amber);
+            color: #000;
+            font-weight: bold;
+            border: none;
+        }
+
+        .btn-ignite:hover {
+            background: #fbbf24;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-glow);
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1rem;
+            color: var(--accent-cyan);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>TechroLim Super Processor</h1>
+        <div class="header-controls">
+            <button id="installBtn" onclick="installApp()">Install App</button>
+            <button onclick="saveProject()">Save State</button>
+            <button onclick="loadProject()">Load State</button>
+            <button onclick="exportData()">Export</button>
+            <label class="file-btn" style="display:inline-block; cursor:pointer;">
+                Import <input type="file" id="importFile" style="display:none" onchange="importData(event)">
+            </label>
+            <button onclick="toggleSettings()">AI Settings</button>
+        </div>
+    </header>
+
+    <div class="main-layout">
+        <!-- Left Engine -->
+        <div class="workstation">
+            <div class="station-header">Alpha Engine // Editor & Terminal</div>
+            <div class="editor-container">
+                <textarea class="code-input" id="codeAlpha" placeholder="// Enter Alpha Gunk / Code script here..."></textarea>
+            </div>
+            <div class="terminal-container">
+                <div class="terminal-output" id="termAlpha">> Alpha Terminal initialized [Port 8888 Ready]</div>
+            </div>
+        </div>
+
+        <!-- Central Induction Furnace & Command Center -->
+        <div class="furnace-core">
+            <div class="furnace-title">Induction Furnace Core</div>
+            
+            <div class="specimen-dropzone" id="dropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+                Drag & Drop Specimen or Code Artifact Here
+            </div>
+
+            <div class="command-center">
+                <div class="command-row">
+                    <input type="text" id="commandInput" placeholder="Enter synthesis / analysis directive...">
+                    <button class="btn-ignite" onclick="igniteFurnace()">Ignite</button>
+                </div>
+                <div class="command-row">
+                    <button style="flex:1;" onclick="runAnalyzer()">Analyze Specimen</button>
+                    <button style="flex:1;" onclick="runSynthesizer()">Synthesize Core</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Engine -->
+        <div class="workstation">
+            <div class="station-header">Omega Engine // Editor & Terminal</div>
+            <div class="editor-container">
+                <textarea class="code-input" id="codeOmega" placeholder="// Enter Omega Gunk / Code script here..."></textarea>
+            </div>
+            <div class="terminal-container">
+                <div class="terminal-output" id="termOmega">> Omega Terminal initialized [Port 8888 Ready]</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>AI Agent Integration Settings</span>
+                <button class="close-modal" onclick="toggleSettings()">&times;</button>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <label style="font-size:0.85rem; color:var(--text-dim);">Active AI Model / Agent</label>
+                <input type="text" id="aiModelSelect" value="Gemini Flash 3.8 / Nexus-Prime">
+                
+                <label style="font-size:0.85rem; color:var(--text-dim);">WebSocket Bus Endpoint</label>
+                <input type="text" id="aiEndpoint" value="ws://localhost:8888">
+                
+                <button onclick="saveSettings()" style="margin-top:10px;">Connect & Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installBtn').style.display = 'inline-block';
+        });
+
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        logTerminal('alpha', 'Super Processor installed successfully to device home screen.');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('installBtn').style.display = 'none';
+                });
+            }
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('Service Worker registered successfully.'))
+                .catch(err => console.log('SW registration failed:', err));
+        }
+
+        function logTerminal(side, message) {
+            const term = document.getElementById(side === 'alpha' ? 'termAlpha' : 'termOmega');
+            term.innerHTML += `<div>> ${message}</div>`;
+            term.scrollTop = term.scrollHeight;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            document.getElementById('dropZone').classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            document.getElementById('dropZone').classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const dropZone = document.getElementById('dropZone');
+            dropZone.classList.remove('dragover');
+            
+            const textData = e.dataTransfer.getData("text");
+            if(textData) {
+                dropZone.innerHTML = `Loaded Specimen: <br><code style="color:var(--accent-cyan);">${textData.substring(0, 40)}...</code>`;
+                logTerminal('alpha', 'Specimen ingested into induction furnace.');
+            } else {
+                dropZone.innerHTML = `Specimen ingested successfully.`;
+                logTerminal('alpha', 'Binary/File specimen loaded into core.');
+            }
+        }
+
+        function igniteFurnace() {
+            const cmd = document.getElementById('commandInput').value;
+            if(!cmd) return;
+            logTerminal('alpha', `Ignition sequence started: ${cmd}`);
+            logTerminal('omega', `Cross-bus reaction synchronized.`);
+            document.getElementById('commandInput').value = '';
+        }
+
+        function runAnalyzer() {
+            logTerminal('alpha', 'Analyzer active: Scanning AST trees and syntax structures...');
+            logTerminal('omega', 'Analyzer telemetry stable.');
+        }
+
+        function runSynthesizer() {
+            logTerminal('alpha', 'Synthesizer active: Fusing dual engine outputs...');
+            logTerminal('omega', 'Synthesis bridge locked.');
+        }
+
+        function toggleSettings() {
+            const modal = document.getElementById('settingsModal');
+            modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function saveSettings() {
+            toggleSettings();
+            logTerminal('alpha', 'AI Integration endpoint updated successfully.');
+        }
+
+        function saveProject() {
+            const state = {
+                alpha: document.getElementById('codeAlpha').value,
+                omega: document.getElementById('codeOmega').value,
+                timestamp: new Date().toISOString()
+            };
+            localStorage.setItem('techrolim_processor_state', JSON.stringify(state));
+            logTerminal('alpha', 'Super Processor state saved to local storage.');
+        }
+
+        function loadProject() {
+            const saved = localStorage.getItem('techrolim_processor_state');
+            if(saved) {
+                const state = JSON.parse(saved);
+                document.getElementById('codeAlpha').value = state.alpha || '';
+                document.getElementById('codeOmega').value = state.omega || '';
+                logTerminal('alpha', 'Processor state restored successfully.');
+            } else {
+                logTerminal('alpha', 'No saved state found.');
+            }
+        }
+
+        function exportData() {
+            const state = {
+                alpha: document.getElementById('codeAlpha').value,
+                omega: document.getElementById('codeOmega').value
+            };
+            const blob = new Blob([JSON.stringify(state, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'techrolim_processor_export.json';
+            a.click();
+            logTerminal('alpha', 'Project exported successfully.');
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const state = JSON.parse(e.target.result);
+                    document.getElementById('codeAlpha').value = state.alpha || '';
+                    document.getElementById('codeOmega').value = state.omega || '';
+                    logTerminal('alpha', 'Project imported successfully.');
+                } catch(err) {
+                    logTerminal('alpha', 'Import failed: Invalid format.');
+                }
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
